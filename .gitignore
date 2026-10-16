@@ -1,0 +1,10 @@
+# Solo se publica la invitación de Franco y María.
+original/
+previews/
+tests/
+.claude/
+CNAME
+preview.cjs
+invitacion-revelacion.html
+Thumbs.db
+.DS_Store
