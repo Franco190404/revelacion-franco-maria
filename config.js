@@ -33,7 +33,13 @@ window.INVITATION_CONFIG = {
   },
   attendance: {
     maxGuests: 4, // Máximo por invitación, contando al invitado. Entero entre 1 y 100.
-    whatsappNumber: "584247323466", // Número internacional con código de país (ej. 584141234567); vacío = sin botón.
+    whatsappNumber: "584247323466", // Número principal (Franco), con código de país.
+    // Cada anfitrión recibe las respuestas de quienes invitó. Comparte el enlace con ?de=franco o ?de=maria
+    // para que el invitado vea sólo el botón de quien le envió la invitación.
+    whatsappHosts: [
+      { key: "franco", name: "Franco", number: "584247323466" },
+      { key: "maria", name: "María", number: "584165022398" },
+    ],
     saveResponse: null, // Función de registro real; consulta el contrato en README.md.
     nextSectionId: "baby-wishes",
   },

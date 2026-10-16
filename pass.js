@@ -97,7 +97,7 @@
       }
     }else{ctx.fillStyle=theme.ink+'b0';ctx.font=`600 16px ${theme.sans}`;ctx.fillText('Las guardo para el gran día',270,y);y+=30;}
     y+=22;divider();
-    ctx.fillStyle=theme.ink;ctx.font=`700 18px ${theme.sans}`;ctx.fillText(`${model.guests} ${model.guests===1?'asistente':'asistentes'} · incluyéndote`,270,y);y+=30;
+    ctx.fillStyle=theme.ink;ctx.font=`700 18px ${theme.sans}`;ctx.fillText(model.guests===1?'1 persona · sin acompañantes':`${model.guests} personas · tú y ${model.guests-1} ${model.guests-1===1?'acompañante':'acompañantes'}`,270,y);y+=30;
     ctx.font=`800 14px ${theme.sans}`;const statusWidth=ctx.measureText(model.status).width+40;
     ctx.fillStyle=ink+'22';round(270-statusWidth/2,y,statusWidth,30,15);ctx.fill();ctx.fillStyle=ink;ctx.fillText(model.status,270,y+7);
     // Datos del evento sobre el fondo de color.

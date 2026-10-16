@@ -17,9 +17,9 @@
   const isConfirmed=record=>record?.delivery==='confirmed'&&isCurrent(record);
   const shareName=()=>window.InvitationCapsule?.setGuestName(name.value,{source:'attendance'});
   for(let count=1;count<=limit;count++){
-    const option=document.createElement('option');option.value=String(count);option.textContent=`${count} ${count===1?'asistente':'asistentes'}`;guests.append(option);
+    const option=document.createElement('option');option.value=String(count);option.textContent=count===1?'1 persona (solo yo)':`${count} personas (yo y ${count-1} ${count-1===1?'acompañante':'acompañantes'})`;guests.append(option);
   }
-  get('attendance-guests-help').textContent=`Incluyéndote. Esta invitación admite hasta ${limit} ${limit===1?'asistente':'asistentes'}.`;
+  get('attendance-guests-help').textContent=`Cuéntate tú también. Esta invitación admite hasta ${limit} ${limit===1?'persona':'personas'}.`;
   function renderFields(){
     get('attendance-guests-field').hidden=fields().response!=='yes';
     get('attendance-note-remaining').textContent=`Quedan ${Math.max(0,250-note.value.length)} caracteres`;
@@ -68,7 +68,7 @@
     try{
       await window.InvitationPass.fontsReady(theme);if(version!==paintVersion)return;
       const model=passModel();window.InvitationPass.draw(get('attendance-pass'),model,theme);
-      get('attendance-pass-description').textContent=`Pase de recuerdo de ${model.name}. ${model.guests} asistentes, incluyéndote. ${model.teamLabel}. ${model.predictions.length?'Mis corazonadas: '+model.predictions.map(row=>`${row.label}: ${row.value}`).join('. ')+'.':''} ${model.parents}. ${model.date}, ${model.time}. ${model.venue}. ${model.status}. Una gran sorpresa nos espera.`;
+      get('attendance-pass-description').textContent=`Pase de recuerdo de ${model.name}. ${core.guestsText(model.guests)} ${model.teamLabel}. ${model.predictions.length?'Mis corazonadas: '+model.predictions.map(row=>`${row.label}: ${row.value}`).join('. ')+'.':''} ${model.parents}. ${model.date}, ${model.time}. ${model.venue}. ${model.status}. Una gran sorpresa nos espera.`;
       get('attendance-download').disabled=exporting;
     }catch(_){if(version===paintVersion){get('attendance-pass-error').hidden=false;get('attendance-pass-error').textContent='No pudimos preparar la imagen. Puedes reintentar con “Descargar mi pase”.';get('attendance-download').disabled=false;}}
     finally{if(version===paintVersion)get('attendance-pass-loading').hidden=true;}
@@ -79,12 +79,21 @@
     get('attendance-result-title').textContent=confirmed&&yes?'¡Tu asistencia está confirmada!':confirmed?'Tu respuesta fue recibida':current?'Tu respuesta, con cariño':'Tu respuesta está en edición';
     get('attendance-delivery-note').textContent=confirmed?'Los anfitriones recibieron tu respuesta.':!current?'Guarda los cambios para actualizar tu respuesta. El pase sigue pendiente de envío.':record.delivery==='local'&&store.isPersisted()?'Tu respuesta está guardada en este dispositivo. Falta enviarla a los anfitriones':record.delivery==='local'?'Tu respuesta está en memoria. Falta enviarla a los anfitriones.':'Tu respuesta sigue pendiente de envío. Puedes reintentar sin volver a escribir los datos.';
     get('attendance-declined').hidden=yes;
-    const count=fields().guests;get('attendance-guests-summary').hidden=!yes;get('attendance-guests-summary').textContent=`${count} ${count===1?'persona va':'personas van'}, contándote.`;
+    const count=fields().guests;get('attendance-guests-summary').hidden=!yes;get('attendance-guests-summary').textContent=count===1?'Vas tú, sin acompañantes: 1 persona.':`Van ${count} personas en total: tú y ${count-1} ${count-1===1?'acompañante':'acompañantes'}.`;
     get('attendance-memory-note').hidden=store.isPersisted();
     get('attendance-pass-area').hidden=!yes;get('attendance-download').hidden=!yes;
-    const link=core.whatsappLink(options.whatsappNumber,{...record,...fields(),name:name.value.trim()});
-    get('attendance-whatsapp').hidden=!link||confirmed;
-    if(link)get('attendance-whatsapp').href=link;
+    // Un botón por anfitrión; con ?de=franco o ?de=maria sólo se muestra el de quien envió el enlace.
+    const hosts=Array.isArray(options.whatsappHosts)&&options.whatsappHosts.length?options.whatsappHosts.slice(0,2):[{name:'',number:options.whatsappNumber}];
+    const from=(((window.location?.search||'').match(/[?&]de=([^&#]+)/)||[])[1]||'').toLowerCase();
+    const known=hosts.some(host=>host.key===from);let shown=0;
+    [hosts[0],hosts[1]||null].forEach((host,index)=>{
+      const button=get(index?'attendance-whatsapp-2':'attendance-whatsapp');
+      const link=host?core.whatsappLink(host.number,{...record,...fields(),name:name.value.trim()},host.name):'';
+      button.hidden=!link||confirmed||(known&&host.key!==from);
+      if(link){button.href=link;get(index?'attendance-whatsapp-2-label':'attendance-whatsapp-label').textContent=host.name?`Enviar a ${host.name} por WhatsApp`:'Enviar por WhatsApp';}
+      if(!button.hidden)shown++;
+    });
+    get('attendance-whatsapp-hint').hidden=shown<2;
     if(yes)renderPass();
   }
   function setMode(next,focus=false){

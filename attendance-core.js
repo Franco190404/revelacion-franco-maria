@@ -43,12 +43,14 @@
     if(!receipt||receipt.ok!==true||receipt.confirmed!==true||receipt.eventId!==record.eventId||receipt.responseId!==record.responseId||receipt.revision!==record.revision)throw new Error('El servidor no confirmó esta respuesta.');
     return {delivery:'confirmed'};
   }
-  function whatsappLink(number,record){
+  // Describe la cantidad sin ambigüedad: quién va y cuántos acompañantes.
+  function guestsText(guests){const n=Number(guests)||1;return n===1?'Asistiré yo, sin acompañantes (1 persona en total).':`Asistiremos ${n} personas en total: yo y ${n-1} ${n-1===1?'acompañante':'acompañantes'}.`;}
+  function whatsappLink(number,record,hostName=''){
     const phone=text(number).replace(/[\s()+-]/g,'');
     if(!/^[1-9]\d{7,14}$/.test(phone)||!record)return '';
-    const message=`Hola, soy ${record.name}.\nMi respuesta a la invitación: ${record.response==='yes'?'Sí, ahí estaré':'Esta vez no podré'}.\nPersonas que van (incluyéndome): ${record.response==='yes'?record.guests:0}.${record.team==='girl'?'\nMi equipo: niña. Llevaré pañales.':record.team==='boy'?'\nMi equipo: niño. Llevaré toallitas húmedas.':''}`;
+    const message=`Hola${hostName?' '+hostName:''}, soy ${record.name}.\nMi respuesta a la invitación: ${record.response==='yes'?'Sí, ahí estaré':'Esta vez no podré'}.${record.response==='yes'?'\n'+guestsText(record.guests):''}${record.team==='girl'?'\nMi equipo: niña. Llevaré pañales.':record.team==='boy'?'\nMi equipo: niño. Llevaré toallitas húmedas.':''}`;
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   }
-  const api={maxGuests,clean,validate,signature,createStore,registerResponse,whatsappLink};
+  const api={maxGuests,clean,validate,signature,createStore,registerResponse,whatsappLink,guestsText};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;else window.InvitationAttendanceCore=api;
 })();
